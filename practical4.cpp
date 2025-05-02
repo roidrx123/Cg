@@ -3,8 +3,9 @@
 #include <cmath>
 
 int xa = 100, ya = 100;
-int xb = 300, yb = 300;
-int clickCount=0;
+int xb = 500, yb = 300;  // Rectangle with a longer width
+
+int clickCount = 0;
 
 // ------------------ Pixel Drawing ------------------
 void drawPixel(int x, int y) {
@@ -22,7 +23,6 @@ void drawLine(int x1, int y1, int x2, int y2) {
     int x = x1;
     int y = y1;
 
-    // Line is more horizontal
     if (dx > dy) {
         int p = 2 * dy - dx;
         for (int i = 0; i <= dx; i++) {
@@ -35,9 +35,7 @@ void drawLine(int x1, int y1, int x2, int y2) {
             }
             x += sx;
         }
-    }
-    // Line is more vertical
-    else {
+    } else {
         int p = 2 * dx - dy;
         for (int i = 0; i <= dy; i++) {
             drawPixel(x, y);
@@ -52,8 +50,7 @@ void drawLine(int x1, int y1, int x2, int y2) {
     }
 }
 
-
-void drawCircle(int xc, int yc, int r) {
+void drawCircle(int xc, int yc, float r) {
     int x = 0, y = r;
     int d = 3 - 2 * r;
     while (x <= y) {
@@ -77,31 +74,44 @@ void drawCircle(int xc, int yc, int r) {
     }
 }
 
-void outerSqaure(){
-    drawLine(xa, ya, xb, ya);
-    drawLine(xb, ya, xb, yb);
-    drawLine(xb, yb, xa, yb);
-    drawLine(xa, yb, xa, ya);
-    }
+void outerRectangle() {
+    drawLine(xa, ya, xb, ya); // Top edge
+    drawLine(xb, ya, xb, yb); // Right edge
+    drawLine(xb, yb, xa, yb); // Bottom edge
+    drawLine(xa, yb, xa, ya); // Left edge
+}
 
-    void innerSqaure(){
+void innerSquare() {
 
+
+    // Draw a square with its sides touching the middle of the rectangle's edges
     drawLine((xa + xb) / 2, ya, xb, (ya + yb) / 2);
     drawLine(xb, (ya + yb) / 2, (xa + xb) / 2, yb);
     drawLine((xa + xb) / 2, yb, xa, (ya + yb) / 2);
     drawLine(xa, (ya + yb) / 2, (xa + xb) / 2, ya);
-
 }
 
-void insidecircle(){
-    int radius = sqrt(((xb - xa) * (xb - xa) + (yb - ya) * (yb - ya))) / 4;
-    drawCircle((xa + xb) / 2, (ya + yb) / 2, radius);
+void insideCircle() {
+    // Calculate the side of the square (distance between two opposite corners)
+    int side = (yb - ya);
+
+    // Radius of the circle will be half of the side of the square
+    float radius = side / 2.2;
+
+    // Calculate center of the square
+    int centerX = (xa + xb) / 2;
+    int centerY = (ya + yb) / 2;
+
+    // Draw the circle inside the square
+    drawCircle(centerX, centerY, radius);
 }
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
-    if(clickCount>=1) outerSqaure();
-    if(clickCount>=2) innerSqaure();
-    if(clickCount>=3) insidecircle();
+
+    if (clickCount >= 1) outerRectangle();    // Draw rectangle
+    if (clickCount >= 2) innerSquare();       // Draw inner square
+    if (clickCount >= 3) insideCircle();      // Draw circle inside the square
 
     glFlush();
 }
@@ -112,6 +122,7 @@ void mouse(int button, int state, int x, int y) {
         glutPostRedisplay();
     }
 }
+
 // ------------------ Initialization ------------------
 void init() {
     glClearColor(1, 1, 1, 1);         // White background
@@ -124,7 +135,7 @@ void init() {
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitWindowSize(600, 600);
-    glutCreateWindow("Diamond Inside Rectangle with Circle");
+    glutCreateWindow("Rectangle, Square, Circle");
     init();
     glutDisplayFunc(display);
     glutMouseFunc(mouse);
