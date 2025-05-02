@@ -3,17 +3,15 @@
 #include <cmath>
 using namespace std;
 
-// Define fixed coordinates
-int xmin = 100, xmax = 500, ymin = 100, ymax = 500;
+int xmin, ymin, xmax, ymax;
+int clickCount = 0;
+bool flag = false;
 
-// ---------------- Draw Pixel ----------------
 void drawPixel(int x, int y) {
     glBegin(GL_POINTS);
     glVertex2i(x, y);
     glEnd();
 }
-
-// ---------------- Bresenham Line Drawing ----------------
 void drawLine(int x1, int y1, int x2, int y2) {
     int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
@@ -50,7 +48,7 @@ void drawLine(int x1, int y1, int x2, int y2) {
     }
 }
 
-void chess(){
+void chessboard(){
 
     int dx = (xmax - xmin) / 4;
     int dy = (ymax - ymin) / 4;
@@ -76,8 +74,6 @@ void chess(){
             glEnd();
         }
     }
-
-    // Draw grid lines using Bresenham
     glColor3f(0.0, 0.0, 0.0);
     for (int i = 0; i <= 4; i++) {
         int x = xmin + i * dx;
@@ -89,29 +85,52 @@ void chess(){
     }
 }
 
-// ---------------- Display ----------------
+// Display Callback
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
-    chess();
+    if (flag)
+        chessboard();
     glFlush();
 }
 
-// ---------------- OpenGL Init ----------------
-void init() {
-    glClearColor(1.0, 1.0, 1.0, 1.0); // White background
-    glColor3f(0.0, 0.0, 0.0);         // Black drawing
-    glPointSize(1.0);
-    gluOrtho2D(0, 600, 0, 600);       // 2D projection
+// Mouse Input
+void mouse(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        y = 600 - y;
+
+        if (clickCount == 0) {
+            xmin = x;
+            ymax = y;
+            clickCount++;
+            cout << "First corner (xmin, ymax): (" << xmin << ", " << ymax << ")\n";
+        } else if (clickCount == 1) {
+            xmax = x;
+            ymin = y;
+            cout << "Second corner (xmax, ymin): (" << xmax << ", " << ymin << ")\n";
+            flag = true;
+            clickCount = 0;
+            glutPostRedisplay();
+        }
+    }
 }
 
-// ---------------- Main ----------------
+// OpenGL Init
+void init() {
+    glClearColor(1, 1, 1, 1);
+    glColor3f(0, 0, 0);
+    glPointSize(1);
+    gluOrtho2D(0, 600, 0, 600);
+}
+
+// Main Function
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitWindowSize(600, 600);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutCreateWindow("4x4 Chessboard using Bresenham Line");
+    glutCreateWindow("Chessboard 4x4 with Bresenham & Mouse Input");
     init();
     glutDisplayFunc(display);
+    glutMouseFunc(mouse);
     glutMainLoop();
     return 0;
 }
