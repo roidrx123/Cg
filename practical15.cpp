@@ -2,10 +2,13 @@
 #include <cmath>
 #include <iostream>
 
-const int radius = 50; // radius of each small and center circle
+const int radius = 50;
 const float PI = 3.14159265;
+int centerX = 300, centerY = 300;
 
-int centerX = 300, centerY = 300; // default center
+int currentCircle = 0; // Tracks how many circles are drawn
+int petalCenters[6][2]; // Store petal center coordinates
+bool petalsComputed = false; // Flag to avoid recomputation
 
 // ---------------- Draw Circle ----------------
 void drawCircle(int xc, int yc, int r) {
@@ -34,45 +37,75 @@ void drawCircle(int xc, int yc, int r) {
     }
 }
 
-// Draw complete flower structure
-void drawFlowerStructure(int xc, int yc) {
-    // Draw center circle
-    drawCircle(xc, yc, radius);
-
-    // Draw 6 surrounding circles
-    int petalCenters[6][2];
-    for (int i = 0; i < 6; i++) {
-        float angle = 2 * PI * i / 6;
-        int px = xc + 2 * radius * cos(angle); // 2 * radius to touch center circle
-        int py = yc + 2 * radius * sin(angle);
-        petalCenters[i][0] = px;
-        petalCenters[i][1] = py;
-        drawCircle(px, py, radius);
+// ---------------- Draw Flower ----------------
+void drawFlowerStructureStepByStep(int step) {
+    // Compute petal centers once
+    if (!petalsComputed) {
+        for (int i = 0; i < 6; i++) {
+            float angle = 2 * PI * i / 6;
+            int px = centerX + 2 * radius * cos(angle);
+            int py = centerY + 2 * radius * sin(angle);
+            petalCenters[i][0] = px;
+            petalCenters[i][1] = py;
+        }
+        petalsComputed = true;
     }
 
-    // Draw outermost circle that passes through all 6 petal centers
-    drawCircle(xc, yc, 2 * radius); // Its radius is 2 * radius
+    if (step >= 1) {
+        // Step 1: draw center circle
+        drawCircle(centerX, centerY, radius);
+    }
+
+    // Step 2-7: Draw petal i-2 (i from 2 to 7)
+    if (step >= 2 && step <= 7) {
+        for (int i = 0; i < step - 1; i++) {
+            drawCircle(petalCenters[i][0], petalCenters[i][1], radius);
+        }
+    }
+
+    if (step == 8) {
+        // Step 8: Draw all petals + outermost circle
+        for (int i = 0; i < 6; i++) {
+            drawCircle(petalCenters[i][0], petalCenters[i][1], radius);
+        }
+        drawCircle(centerX, centerY, 2 * radius);
+    }
 }
 
+// ---------------- Display ----------------
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(0, 0, 0);
-    drawFlowerStructure(centerX, centerY);
+    drawFlowerStructureStepByStep(currentCircle);
     glFlush();
 }
 
+// ---------------- Mouse Click Handler ----------------
+void mouse(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        if (currentCircle < 8) {
+            currentCircle++;
+            glutPostRedisplay();
+        }
+    }
+}
+
+// ---------------- Init ----------------
 void init() {
     glClearColor(1, 1, 1, 1);
     gluOrtho2D(0, 600, 0, 600);
 }
 
+// ---------------- Main ----------------
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(600, 600);
-    glutCreateWindow("Circle Flower Structure - Bresenham");
+    glutInitWindowPosition(100, 100);
+    glutCreateWindow("Click to Draw Flower Circle - Bresenham");
     init();
     glutDisplayFunc(display);
-
+    glutMouseFunc(mouse);
     glutMainLoop();
     return 0;
 }
