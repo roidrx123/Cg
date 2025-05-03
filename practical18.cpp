@@ -1,22 +1,27 @@
 #include <GL/glut.h>
-#include <iostream>
-using namespace std;
-int clickCount=0;
-// ---------------- Bresenham Circle Drawing ----------------
-void drawCircle(int xc, int yc, int r) {
+
+int centerX = 320, centerY = 240; // Center of window
+int circleCount = 0; // Number of circles to draw (one per click)
+
+void putPixel(int x, int y) {
+    glBegin(GL_POINTS);
+    glVertex2i(x, y);
+    glEnd();
+}
+
+void bresenhamCircle(int xc, int yc, int r) {
     int x = 0, y = r;
     int d = 3 - 2 * r;
 
-    glBegin(GL_POINTS);
     while (x <= y) {
-        glVertex2i(xc + x, yc + y);
-        glVertex2i(xc - x, yc + y);
-        glVertex2i(xc + x, yc - y);
-        glVertex2i(xc - x, yc - y);
-        glVertex2i(xc + y, yc + x);
-        glVertex2i(xc - y, yc + x);
-        glVertex2i(xc + y, yc - x);
-        glVertex2i(xc - y, yc - x);
+        putPixel(xc + x, yc + y);
+        putPixel(xc - x, yc + y);
+        putPixel(xc + x, yc - y);
+        putPixel(xc - x, yc - y);
+        putPixel(xc + y, yc + x);
+        putPixel(xc - y, yc + x);
+        putPixel(xc + y, yc - x);
+        putPixel(xc - y, yc - x);
 
         x++;
         if (d > 0) {
@@ -26,60 +31,58 @@ void drawCircle(int xc, int yc, int r) {
             d = d + 4 * x + 6;
         }
     }
-    glEnd();
 }
 
-// ---------------- Draw Quadrant Axes ----------------
-void drawAxes() {
-    glColor3f(0, 1, 0); // Green lines
+void drawLine(int x1, int y1, int x2, int y2) {
     glBegin(GL_LINES);
-    glVertex2i(300, 0);     // Vertical line (Y-axis)
-    glVertex2i(300, 600);
-    glVertex2i(0, 300);     // Horizontal line (X-axis)
-    glVertex2i(600, 300);
+    glVertex2i(x1, y1);
+    glVertex2i(x2, y2);
     glEnd();
 }
 
-// ---------------- Draw 5 Concentric Circles ----------------
-void drawConcentricCircles() {
-
-    glColor3f(0, 0, 0); // Black circles
-    for (int r = 30; r <= 150; r += 30) {
-        drawCircle(300, 300, r);  // Center at (300, 300)
-    }
-}
-
-// ---------------- Display Function ----------------
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
-        drawAxes();
 
-    if(clickCount>=1) drawConcentricCircles();
+    // Draw axes (green)
+    glColor3f(0, 1, 0);
+    drawLine(centerX, 120, centerX, 360);
+    drawLine(200, centerY, 440, centerY);
+
+    // Draw up to 'circleCount' circles
+    glColor3f(0, 0, 0); // Black
+    for (int i = 1; i <= circleCount; i++) {
+        int radius = 20 * i + 20; // radii: 40, 60, 80, 100, 120
+        bresenhamCircle(centerX, centerY, radius);
+    }
+
     glFlush();
 }
 
-// ---------------- Init ----------------
-void init() {
-    glClearColor(1, 1, 1, 1);        // White background
-    glColor3f(0, 0, 0);              // Default color
-    glPointSize(1.0);
-    gluOrtho2D(0, 600, 0, 600);      // 2D coordinates
-}
-void mouseClick(int button, int state, int x, int y) {
+void mouseHandler(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-            clickCount++;
+        if (circleCount < 5) { // Only draw up to 5 circles
+            circleCount++;
+            glutPostRedisplay();
+        }
     }
 }
 
-// ---------------- Main ----------------
+void init() {
+    glClearColor(1, 1, 1, 1); // White background
+    glColor3f(0, 0, 0); // Default black
+    glPointSize(1);
+    gluOrtho2D(0, 640, 0, 480); // 2D view
+}
+
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowSize(600, 600);
-    glutCreateWindow("5 Concentric Circles at Center - Bresenham");
+    glutInitWindowSize(640, 480);
+    glutCreateWindow("Bresenham Circle - One per Click");
+
     init();
     glutDisplayFunc(display);
-    glutMouseFunc(mouseClick);
+    glutMouseFunc(mouseHandler);
     glutMainLoop();
     return 0;
 }
