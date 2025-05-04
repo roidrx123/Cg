@@ -1,3 +1,4 @@
+
 #include <GL/glut.h>
 #include <iostream>
 #include <cmath>
@@ -34,14 +35,14 @@ void drawDDA(float x1, float y1, float x2, float y2) {
     glEnd();
 }
 
-// Draw rectangle by connecting 4 points
+// Draw rectangle using 4 corner points
 void drawRectangle() {
     for (int i = 0; i < 4; i++) {
         drawDDA(rect[i].x, rect[i].y, rect[(i + 1) % 4].x, rect[(i + 1) % 4].y);
     }
 }
 
-// Translate all 4 points
+// Translate rectangle
 void translateRectangle(float tx, float ty) {
     for (int i = 0; i < 4; i++) {
         rect[i].x += tx;
@@ -49,40 +50,23 @@ void translateRectangle(float tx, float ty) {
     }
 }
 
-// Rotate around center
-void rotateRectangle(float angle) {
-    float rad = angle * M_PI / 180.0;
-
-    // Find center
-    float centerX = 0, centerY = 0;
-    for (int i = 0; i < 4; i++) {
-        centerX += rect[i].x;
-        centerY += rect[i].y;
-    }
-    centerX /= 4;
-    centerY /= 4;
-
-    // Rotate each point around center
-    for (int i = 0; i < 4; i++) {
-        float x = rect[i].x - centerX;
-        float y = rect[i].y - centerY;
-
-        float newX = x * cos(rad) - y * sin(rad);
-        float newY = x * sin(rad) + y * cos(rad);
-
-        rect[i].x = newX + centerX;
-        rect[i].y = newY + centerY;
+// Scale rectangle about its center
+void scaleRectangle(float sx, float sy) {
+      for (int i = 0; i < 4; i++) {
+        rect[i].x *= sx;
+        rect[i].y *= sy;
     }
 }
 
+// Display
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0, 0, 1);
+    glColor3f(0, 0, 1); // Blue
     drawRectangle();
     glFlush();
 }
 
-// Right-click menu
+// Menu
 void menu(int choice) {
     switch (choice) {
         case 1: {
@@ -93,35 +77,37 @@ void menu(int choice) {
             break;
         }
         case 2: {
-            float angle;
-            cout << "Enter rotation angle (degrees): ";
-            cin >> angle;
-            rotateRectangle(angle);
+            float sx, sy;
+            cout << "Enter scaling factors (sx sy): ";
+            cin >> sx >> sy;
+            scaleRectangle(sx, sy);
             break;
         }
     }
     glutPostRedisplay();
 }
 
+// Initialization
 void init() {
-    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClearColor(1.0, 1.0, 1.0, 1.0); // White background
     glPointSize(2);
     glMatrixMode(GL_PROJECTION);
     gluOrtho2D(0, 500, 0, 500);
 }
 
+// Main
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(500, 500);
-    glutCreateWindow("Rectangle - Translate & Rotate");
+    glutCreateWindow("2D Rectangle: Translate & Scale");
 
     init();
     glutDisplayFunc(display);
 
     glutCreateMenu(menu);
     glutAddMenuEntry("Translate", 1);
-    glutAddMenuEntry("Rotate", 2);
+    glutAddMenuEntry("Scale", 2);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     glutMainLoop();
