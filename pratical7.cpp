@@ -3,22 +3,28 @@
 #include <cmath>
 using namespace std;
 
-// Global rectangle corners
-float rectX1 = 100, rectY1 = 100;
-float rectX2 = 200, rectY2 = 200;
+struct Point {
+    float x, y;
+};
 
-// DDA Line Drawing Algorithm
-void drawDDA(float xStart, float yStart, float xEnd, float yEnd) {
-    float dx = xEnd - xStart;
-    float dy = yEnd - yStart;
+// Rectangle corners
+Point rect[4] = {
+    {100, 100}, // Bottom-left
+    {200, 100}, // Bottom-right
+    {200, 200}, // Top-right
+    {100, 200}  // Top-left
+};
 
-    int steps = max(abs(dx),abs(dy));
+// DDA Line Drawing
+void drawDDA(float x1, float y1, float x2, float y2) {
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+
+    int steps = max(abs(dx), abs(dy));
     float xInc = dx / steps;
     float yInc = dy / steps;
 
-    float x = xStart;
-    float y = yStart;
-
+    float x = x1, y = y1;
     glBegin(GL_POINTS);
     for (int i = 0; i <= steps; i++) {
         glVertex2i(round(x), round(y));
@@ -28,82 +34,94 @@ void drawDDA(float xStart, float yStart, float xEnd, float yEnd) {
     glEnd();
 }
 
-// Draw rectangle using DDA
+// Draw rectangle by connecting 4 points
 void drawRectangle() {
-    drawDDA(rectX1, rectY1, rectX2, rectY1); // Bottom
-    drawDDA(rectX2, rectY1, rectX2, rectY2); // Right
-    drawDDA(rectX2, rectY2, rectX1, rectY2); // Top
-    drawDDA(rectX1, rectY2, rectX1, rectY1); // Left
+    for (int i = 0; i < 4; i++) {
+        drawDDA(rect[i].x, rect[i].y, rect[(i + 1) % 4].x, rect[(i + 1) % 4].y);
+    }
 }
 
-// Translation
+// Translate all 4 points
 void translateRectangle(float tx, float ty) {
-    rectX1 += tx;
-    rectY1 += ty;
-    rectX2 += tx;
-    rectY2 += ty;
+    for (int i = 0; i < 4; i++) {
+        rect[i].x += tx;
+        rect[i].y += ty;
+    }
 }
 
-// Scaling
-void scaleRectangle(float sx, float sy) {
-    rectX1 *= sx;
-    rectY1 *= sy;
-    rectX2 *= sx;
-    rectY2 *= sy;
+// Rotate around center
+void rotateRectangle(float angle) {
+    float rad = angle * M_PI / 180.0;
+
+    // Find center
+    float centerX = 0, centerY = 0;
+    for (int i = 0; i < 4; i++) {
+        centerX += rect[i].x;
+        centerY += rect[i].y;
+    }
+    centerX /= 4;
+    centerY /= 4;
+
+    // Rotate each point around center
+    for (int i = 0; i < 4; i++) {
+        float x = rect[i].x - centerX;
+        float y = rect[i].y - centerY;
+
+        float newX = x * cos(rad) - y * sin(rad);
+        float newY = x * sin(rad) + y * cos(rad);
+
+        rect[i].x = newX + centerX;
+        rect[i].y = newY + centerY;
+    }
 }
 
-// Display function
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0, 0, 1); // Blue color
+    glColor3f(0, 0, 1);
     drawRectangle();
     glFlush();
 }
 
-// Menu function
+// Right-click menu
 void menu(int choice) {
     switch (choice) {
         case 1: {
             float tx, ty;
-            cout << "Enter translation values (tx ty): ";
+            cout << "Enter translation (tx ty): ";
             cin >> tx >> ty;
             translateRectangle(tx, ty);
             break;
         }
         case 2: {
-            float sx, sy;
-            cout << "Enter scaling factors (sx sy): ";
-            cin >> sx >> sy;
-            scaleRectangle(sx, sy);
+            float angle;
+            cout << "Enter rotation angle (degrees): ";
+            cin >> angle;
+            rotateRectangle(angle);
             break;
         }
     }
     glutPostRedisplay();
 }
 
-// Initialization
 void init() {
-    glClearColor(1.0, 1.0, 1.0, 1.0); // White background
-    glColor3f(0.0, 0.0, 1.0); // Blue color
+    glClearColor(1.0, 1.0, 1.0, 1.0);
     glPointSize(2);
     glMatrixMode(GL_PROJECTION);
-    gluOrtho2D(0, 500, 0, 500); // Set the coordinate system
+    gluOrtho2D(0, 500, 0, 500);
 }
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(500, 500);
-    glutCreateWindow("2D Rectangle: Translate & Scale");
+    glutCreateWindow("Rectangle - Translate & Rotate");
 
     init();
-
     glutDisplayFunc(display);
 
-    // Create menu
     glutCreateMenu(menu);
     glutAddMenuEntry("Translate", 1);
-    glutAddMenuEntry("Scale", 2);
+    glutAddMenuEntry("Rotate", 2);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     glutMainLoop();
