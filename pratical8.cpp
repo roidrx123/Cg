@@ -51,27 +51,12 @@ void translateRectangle(float tx, float ty) {
 
 // Rotate around center
 void rotateRectangle(float angle) {
-    float rad = angle * M_PI / 180.0;
+      float ang = angle * 3.14 / 180.0;
 
-    // Find center
-    float centerX = 0, centerY = 0;
-    for (int i = 0; i < 4; i++) {
-        centerX += rect[i].x;
-        centerY += rect[i].y;
-    }
-    centerX /= 4;
-    centerY /= 4;
 
-    // Rotate each point around center
-    for (int i = 0; i < 4; i++) {
-        float x = rect[i].x - centerX;
-        float y = rect[i].y - centerY;
-
-        float newX = x * cos(rad) - y * sin(rad);
-        float newY = x * sin(rad) + y * cos(rad);
-
-        rect[i].x = newX + centerX;
-        rect[i].y = newY + centerY;
+    for (int j = 0; j < 4; j++) {
+        rect[j].x = rect[j].x * cos(ang) - rect[j].y * sin(ang);
+        rect[j].y = rect[j].x * sin(ang) + rect[j].y * cos(ang);
     }
 }
 
@@ -107,13 +92,13 @@ void init() {
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glPointSize(2);
     glMatrixMode(GL_PROJECTION);
-    gluOrtho2D(0, 500, 0, 500);
+    gluOrtho2D(0, 800, 0, 800);
 }
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowSize(500, 500);
+    glutInitWindowSize(800, 800);
     glutCreateWindow("Rectangle - Translate & Rotate");
 
     init();
