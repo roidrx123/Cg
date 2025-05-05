@@ -83,12 +83,13 @@ void outerRectangle() {
 
 void innerSquare() {
 
-
+int midx=(xa + xb) / 2;
+int midy=(ya + yb) / 2;
     // Draw a square with its sides touching the middle of the rectangle's edges
-    drawLine((xa + xb) / 2, ya, xb, (ya + yb) / 2);
-    drawLine(xb, (ya + yb) / 2, (xa + xb) / 2, yb);
-    drawLine((xa + xb) / 2, yb, xa, (ya + yb) / 2);
-    drawLine(xa, (ya + yb) / 2, (xa + xb) / 2, ya);
+    drawLine(midx, ya, xb,midy );
+    drawLine(xb, midy, midx, yb);
+    drawLine(midx, yb, xa, midy);
+    drawLine(xa, midy, midx, ya);
 }
 
 void insideCircle() {
