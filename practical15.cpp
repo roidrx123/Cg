@@ -6,9 +6,8 @@ const int radius = 50;
 const float PI = 3.14159265;
 int centerX = 300, centerY = 300;
 
-int currentCircle = 0; // Tracks how many circles are drawn
 int petalCenters[6][2]; // Store petal center coordinates
-bool petalsComputed = false; // Flag to avoid recomputation
+bool flowerDrawn = false; // Flag to track if flower is already drawn
 
 // ---------------- Draw Circle ----------------
 void drawCircle(int xc, int yc, int r) {
@@ -38,55 +37,43 @@ void drawCircle(int xc, int yc, int r) {
 }
 
 // ---------------- Draw Flower ----------------
-void drawFlowerStructureStepByStep(int step) {
-    // Compute petal centers once
-    if (!petalsComputed) {
-        for (int i = 0; i < 6; i++) {
-            float angle = 2 * PI * i / 6;
-            int px = centerX + 2 * radius * cos(angle);
-            int py = centerY + 2 * radius * sin(angle);
-            petalCenters[i][0] = px;
-            petalCenters[i][1] = py;
-        }
-        petalsComputed = true;
+void drawFlower() {
+    // Compute petal centers
+    for (int i = 0; i < 6; i++) {
+        float angle = 2 * PI * i / 6;
+        int px = centerX + 2 * radius * cos(angle);
+        int py = centerY + 2 * radius * sin(angle);
+        petalCenters[i][0] = px;
+        petalCenters[i][1] = py;
     }
 
-    if (step >= 1) {
-        // Step 1: draw center circle
-        drawCircle(centerX, centerY, radius);
+    // Draw center
+    drawCircle(centerX, centerY, radius);
+
+    // Draw petals
+    for (int i = 0; i < 6; i++) {
+        drawCircle(petalCenters[i][0], petalCenters[i][1], radius);
     }
 
-    // Step 2-7: Draw petal i-2 (i from 2 to 7)
-    if (step >= 2 && step <= 7) {
-        for (int i = 0; i < step - 1; i++) {
-            drawCircle(petalCenters[i][0], petalCenters[i][1], radius);
-        }
-    }
-
-    if (step == 8) {
-        // Step 8: Draw all petals + outermost circle
-        for (int i = 0; i < 6; i++) {
-            drawCircle(petalCenters[i][0], petalCenters[i][1], radius);
-        }
-        drawCircle(centerX, centerY, 2 * radius);
-    }
+    // Draw outermost circle
+    drawCircle(centerX, centerY, 2 * radius);
 }
 
 // ---------------- Display ----------------
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(0, 0, 0);
-    drawFlowerStructureStepByStep(currentCircle);
+    if (flowerDrawn) {
+        drawFlower();
+    }
     glFlush();
 }
 
 // ---------------- Mouse Click Handler ----------------
 void mouse(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        if (currentCircle < 8) {
-            currentCircle++;
-            glutPostRedisplay();
-        }
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && !flowerDrawn) {
+        flowerDrawn = true;
+        glutPostRedisplay();
     }
 }
 
@@ -102,7 +89,7 @@ int main(int argc, char** argv) {
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(600, 600);
     glutInitWindowPosition(100, 100);
-    glutCreateWindow("Click to Draw Flower Circle - Bresenham");
+    glutCreateWindow("Click to Draw Full Flower - Bresenham");
     init();
     glutDisplayFunc(display);
     glutMouseFunc(mouse);
