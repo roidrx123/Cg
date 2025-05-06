@@ -1,6 +1,6 @@
 #include <GL/glut.h>
 #include <cmath>
-#include <vector>
+
 
 // Control points for Bezier
 float bezierPoints[4][2] = {
